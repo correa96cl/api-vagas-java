@@ -1,5 +1,9 @@
 package br.com.gestao.vagas.modules.company.useCases;
 
+import java.time.Instant;
+import java.util.Arrays;
+import java.time.Duration;
+
 import javax.naming.AuthenticationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +16,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 
 import br.com.gestao.vagas.modules.company.dto.AuthCompanyDTO;
+import br.com.gestao.vagas.modules.company.dto.AuthCompanyResponseDTO;
 import br.com.gestao.vagas.modules.company.repositories.CompanyRepository;
 
 @Service
@@ -26,7 +31,7 @@ public class AuthCompanyUseCase {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public String execute(AuthCompanyDTO authCompanyDTO) throws AuthenticationException {
+    public AuthCompanyResponseDTO execute(AuthCompanyDTO authCompanyDTO) throws AuthenticationException {
         var company = this.companyRepository.findByUsername(authCompanyDTO.getUsername()).orElseThrow(
             () -> {
                 throw new UsernameNotFoundException("Username/password incorrect");
@@ -38,11 +43,20 @@ public class AuthCompanyUseCase {
             throw new AuthenticationException();
         }
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
+
+        var expiresIn = Instant.now().plus(Duration.ofHours(2));
         String token = JWT.create().withIssuer("javavagas")
+        .withExpiresAt(expiresIn)
         .withSubject(company.getId().toString())
+        .withClaim("roles", Arrays.asList("COMPANY"))
         .sign(algorithm);
 
-        return token;
+        var authCompanyResponseDTO = AuthCompanyResponseDTO.builder()
+        .access_token(token)
+        .expires_in(expiresIn.toEpochMilli())
+        .build();
+
+        return authCompanyResponseDTO;
     }
 
 }

@@ -1,4 +1,4 @@
-package br.com.gestao.vagas.modules.candidate.controllers;
+package br.com.gestao.vagas.modules.candidate;
 
 import java.util.Optional;
 import java.util.UUID;

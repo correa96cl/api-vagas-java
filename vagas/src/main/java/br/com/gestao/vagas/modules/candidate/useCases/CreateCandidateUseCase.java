@@ -1,17 +1,21 @@
-package br.com.gestao.vagas.modules.candidate.useCases;
+package br.com.gestao.vagas.modules.candidate.usecases;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.com.gestao.vagas.exceptions.UserFoundException;
-import br.com.gestao.vagas.modules.candidate.controllers.CandidateEntity;
-import br.com.gestao.vagas.modules.candidate.controllers.CandidateRepository;
+import br.com.gestao.vagas.modules.candidate.CandidateEntity;
+import br.com.gestao.vagas.modules.candidate.CandidateRepository;
 
 @Service
 public class CreateCandidateUseCase {
 
-        @Autowired
+    @Autowired
     private CandidateRepository candidateRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public CandidateEntity execute(CandidateEntity candidateEntity){
        this.candidateRepository.findByUsernameOrEmail(candidateEntity.getUsername(), candidateEntity.getEmail()).ifPresent(
@@ -19,6 +23,9 @@ public class CreateCandidateUseCase {
                 throw new UserFoundException();
             }
         );
+
+        var password = passwordEncoder.encode(candidateEntity.getPassword());
+        candidateEntity.setPassword(password);
 
         return this.candidateRepository.save(candidateEntity);
     }
